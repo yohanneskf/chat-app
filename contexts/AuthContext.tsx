@@ -1,4 +1,5 @@
-"use client";
+// contexts/AuthContext.tsx
+"use client"; // <-- Add this at the very top
 
 import React, {
   createContext,
@@ -51,7 +52,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     if (!response.ok) {
-      throw new Error("Login failed");
+      const error = await response.json();
+      throw new Error(error.error || "Login failed");
     }
 
     const data = await response.json();
@@ -71,7 +73,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     if (!response.ok) {
-      throw new Error("Registration failed");
+      const error = await response.json();
+      throw new Error(error.error || "Registration failed");
     }
 
     const data = await response.json();
