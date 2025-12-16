@@ -1,57 +1,50 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client"
-  output   = "../app/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "mongodb"
 }
 
-
-
 model User {
   id            String    @id @default(auto()) @map("_id") @db.ObjectId
   email         String    @unique
-  name          String?
   password      String
-  avatar        String?
+  name          String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  
-  // Relations
-  sentMessages     Message[] @relation("Sender")
-  receivedMessages Message[] @relation("Receiver")
+  messages      Message[]
+  conversations ConversationParticipant[]
 }
 
 model Message {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  content     String
-  senderId    String   @db.ObjectId
-  receiverId  String   @db.ObjectId
-  read        Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  
-  // Relations
-  sender     User   @relation("Sender", fields: [senderId], references: [id])
-  receiver   User   @relation("Receiver", fields: [receiverId], references: [id])
-  
-  @@index([senderId])
-  @@index([receiverId])
-  @@index([createdAt])
+  id             String    @id @default(auto()) @map("_id") @db.ObjectId
+  content        String
+  senderId       String    @db.ObjectId
+  conversationId String    @db.ObjectId
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  sender         User      @relation(fields: [senderId], references: [id])
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
 }
 
 model Conversation {
-  id          String    @id @default(auto()) @map("_id") @db.ObjectId
-  userIds     String[]  @db.ObjectId
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
+  name         String?
+  isGroup      Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  participants ConversationParticipant[]
+  messages     Message[]
+  lastMessageAt DateTime @default(now())
+}
+
+model ConversationParticipant {
+  id             String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String    @db.ObjectId
+  conversationId String    @db.ObjectId
+  user           User      @relation(fields: [userId], references: [id])
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
   
-  // We'll use this to quickly fetch user conversations
-  @@index([userIds])
+  @@unique([userId, conversationId])
 }
